@@ -40,12 +40,13 @@ class Upc {
         $this->code = $code;
 
         //check to see if code is numeric
-        if(is_numeric($code)) {
+        if(is_numeric($this->code)) {
 
-            $upc_code = $code;
+            $upc_code = $this->code;
 
-            $code = '*' . substr($code, 0, 6) . '#' . substr($code, 6, 6) . '*';
+            $this->code = '*' . substr($this->code, 0, 6) . '#' . substr($this->code, 6, 6) . '*';
 
+            //12 x 7 + 6 +5 = 95 # = 1 x 5 * = 2 x 3
             $this->width = $this->bar_width * 95 + $this->padding * 2;
             $this->bar_height = $this->bar_width * 95 * 0.75;
             $this->height = $this->bar_height + $this->padding * 2;
@@ -63,7 +64,7 @@ class Upc {
             //15 for 12 characters of the code and 2 * and 1 #
             for($count = 0; $count < 15; $count++) {
 
-                $character = $code[$count];
+                $character = $this->code[$count];
 
                 for($subcount = 0; $subcount < strlen($this->manufacturer_code[$character]); $subcount++) {
                     if($count < 7) {
