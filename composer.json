@@ -1,0 +1,37 @@
+{
+  "name": "tuckbloor/upcBarcode",
+  "description": "UPC Barcode Generator",
+  "keywords": [
+    "UPC",
+    "Barcode",
+    "Generator"
+
+  ],
+  "homepage":"http://www.codecavern.co.uk",
+  "license": "MIT",
+  "authors":[
+    {
+      "name":"tuck"
+    }
+  ],
+  "type": "library",
+  "require": {
+    "php": ">= 5.3.0"
+  },
+  "require-dev": {
+    "filp/whoops": "2.3.*"
+  },
+  "autoload": {
+    "classmap": [
+      "Class"
+    ],
+    "psr-4": {
+      "App\\": "Class"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  }
+}

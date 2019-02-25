@@ -1,22 +1,30 @@
 <?php
 
+namespace App;
+
 class Upc {
 
     private $width;
     private $height;
-    private $bar_width;
+    private $barcode_size;
     private $bar_height;
-    private $border;
+    private $border = 2;
     private $padding;
     private $manufacturer_code;
     private $product_code;
     private $code;
+    private $barcode;
 
-    function __construct($bar_width) {
+    function __construct($barcode_size, $code) {
 
-        $this->bar_width = $bar_width; //set the width of the bar
-        $this->padding  = $bar_width * 10;  //set padding around the barcode
-        $this->border   = 2; //2px of border
+        if (!extension_loaded('gd')) {
+            echo "GD extension Is Not Available";
+            return false;
+        }
+
+        $this->code = $code;
+        $this->barcode_size = $barcode_size; //set the width of the bar
+        $this->padding  = $this->barcode_size * 10;  //set padding around the barcode
 
         //left barcode odd number of 1 so that it can be scanned upside down (manufacturers code)
         $this->manufacturer_code = array(
@@ -34,29 +42,37 @@ class Upc {
 
     }
 
-    public function generate($code) {
+    public function __call($method, $args) {
+        echo "Method " . $method . " Does Not Exist";
+    }
 
-        //the code passed
-        $this->code = $code;
+    public function generate() {
 
         //check to see if code is numeric
-        if(is_numeric($this->code)) {
+        if(is_numeric($this->code) && strlen($this->code) == 12) {
 
-            $upc_code = $this->code;
+
+            $font = 'Aller_Rg.ttf';
+
+            //the numbers to display
+            $first_digit            = substr($this->code,0,1);
+            $left_manufacturer_code = substr($this->code,1,5);
+            $right_product_code     = substr($this->code,6,5);
+            $last_digit             = substr($this->code,11,1);
 
             $this->code = '*' . substr($this->code, 0, 6) . '#' . substr($this->code, 6, 6) . '*';
 
             //12 x 7 + 6 +5 = 95 # = 1 x 5 * = 2 x 3
-            $this->width = $this->bar_width * 95 + $this->padding * 2;
-            $this->bar_height = $this->bar_width * 95 * 0.75;
+            $this->width = $this->barcode_size * 95 + $this->padding * 2;
+            $this->bar_height = $this->barcode_size * 95 * 0.75;
             $this->height = $this->bar_height + $this->padding * 2;
 
-            $barcode = imagecreatetruecolor($this->width, $this->bar_height);
+            $this->barcode = imagecreatetruecolor($this->width, $this->bar_height);
 
-            $black = imagecolorallocate($barcode,0,0,0);
-            $white = imagecolorallocate($barcode,255,255,255);
+            $black = imagecolorallocate($this->barcode,0,0,0);
+            $white = imagecolorallocate($this->barcode,255,255,255);
 
-            imagefilledrectangle($barcode, $this->border, $this->border,$this->width - $this->border -1,
+            imagefilledrectangle($this->barcode, $this->border, $this->border,$this->width - $this->border -1,
                                  $this->bar_height - $this->border -1, $white);
 
             $bar_start_position = $this->padding;
@@ -80,41 +96,38 @@ class Upc {
                         $height_offset = 0;
                     }
 
-                    imagefilledrectangle($barcode, $bar_start_position, $this->padding, $bar_start_position +
-                             $this->bar_width -1,$this->bar_height - $height_offset - $this->padding, $colour);
+                    imagefilledrectangle($this->barcode, $bar_start_position, $this->padding, $bar_start_position +
+                             $this->barcode_size -1,$this->bar_height - $height_offset - $this->padding, $colour);
 
                     //move position for the next line
-                    $bar_start_position += $this->bar_width;
+                    $bar_start_position += $this->barcode_size;
 
                 }
             }
 
-            $font = 'Aller_Rg.ttf';
-
-            //the numbers to display
-            $first_digit            = substr($upc_code,0,1);
-            $left_manufacturer_code = substr($upc_code,1,5);
-            $right_product_code     = substr($upc_code,6,5);
-            $last_digit             = substr($upc_code,11,1);
 
             //calculate the variables for the imagettftext
-            $font_size = 8   * $this->bar_width;
-            $x1        = 2   * $this->bar_width;
-            $x2        = 18  * $this->bar_width;
-            $x3        = 64  * $this->bar_width;
-            $x4        = 106 * $this->bar_width;
-            $y         = 66  * $this->bar_width;
+            $font_size = 8   * $this->barcode_size;
+            $x1        = 2   * $this->barcode_size;
+            $x2        = 18  * $this->barcode_size;
+            $x3        = 64  * $this->barcode_size;
+            $x4        = 106 * $this->barcode_size;
+            $y         = 66  * $this->barcode_size;
 
 
-            imagettftext ( $barcode , $font_size, 0 , $x1 , $y  , $black , $font , $first_digit );
-            imagettftext ( $barcode , $font_size, 0 , $x2 , $y  , $black , $font , $left_manufacturer_code );
-            imagettftext ( $barcode , $font_size, 0 , $x3 , $y  , $black , $font , $right_product_code );
-            imagettftext ( $barcode , $font_size, 0 , $x4 , $y  , $black , $font , $last_digit );
+            imagettftext ( $this->barcode , $font_size, 0 , $x1 , $y  , $black , $font , $first_digit );
+            imagettftext ( $this->barcode , $font_size, 0 , $x2 , $y  , $black , $font , $left_manufacturer_code );
+            imagettftext ( $this->barcode , $font_size, 0 , $x3 , $y  , $black , $font , $right_product_code );
+            imagettftext ( $this->barcode , $font_size, 0 , $x4 , $y  , $black , $font , $last_digit );
 
             //display the barcode
             header("Content-type: image/png");
-            imagepng($barcode);
-            imagedestroy($barcode);
+            imagepng($this->barcode);
+            imagedestroy($this->barcode);
+        }
+        else {
+            echo "The Code Entered Was Not A Valid Format";
         }
     }
+
 }
