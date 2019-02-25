@@ -1,6 +1,6 @@
 <?php
 
-    include('Class/Upc.php');
+    require_once __DIR__ . '/vendor/autoload.php';
 
     $code = "033984026216";
 
